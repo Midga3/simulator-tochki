@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор точки</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+            font-family: Arial, sans-serif;
+        }
+        
+        #counter {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 64px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .counter-pop {
+            transform: translateX(-50%) scale(1.3);
+            color: #ffcc00;
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+        }
+        
+        .point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.8),
+                0 0 40px rgba(255, 255, 255, 0.4);
+        }
+        
+        .point:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 
+                0 0 25px rgba(255, 255, 255, 1),
+                0 0 50px rgba(255, 255, 255, 0.6);
+        }
+        
+        .point-click {
+            animation: clickEffect 0.3s ease-out;
+        }
+        
+        @keyframes clickEffect {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(0.7);
+                box-shadow: 
+                    0 0 10px rgba(255, 255, 255, 0.5),
+                    0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .trail {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: trailFade 0.8s ease-out forwards;
+        }
+        
+        @keyframes trailFade {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+        
+        .counter-bounce {
+            display: inline-block;
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        .plus-one {
+            position: absolute;
+            color: #ffcc00;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            opacity: 0;
+            animation: floatUp 1s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="counter">0</div>
+    <div id="point" class="point"></div>
+
+    <script>
+        const counter = document.getElementById('counter');
+        const point = document.getElementById('point');
+        const body = document.body;
+        let count = 0;
+        
+        // Позиционируем точку по центру при загрузке
+        window.addEventListener('load', () => {
+            moveToCenter();
+        });
+        
+        // Обработчик клика по точке
+        point.addEventListener('click', (e) => {
+            // Анимация клика
+            point.classList.add('point-click');
+            setTimeout(() => {
+                point.classList.remove('point-click');
+            }, 300);
+            
+            // Создаем след от точки
+            createTrail(e.clientX, e.clientY);
+            
+            // Увеличиваем счетчик с анимацией
+            count++;
+            animateCounter();
+            
+            // Показываем "+1" анимацию
+            showPlusOne(e.clientX, e.clientY);
+            
+            // Перемещаем точку
+            moveRandom();
+        });
+        
+        // Переместить в центр
+        function moveToCenter() {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            point.style.left = `${centerX}px`;
+            point.style.top = `${centerY}px`;
+            
+            // Анимация появления
+            point.style.opacity = '0';
+            point.style.transform = 'translate(-50%, -50%) scale(0)';
+            
+            setTimeout(() => {
+                point.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                point.style.opacity = '1';
+                point.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 100);
+        }
+        
+        // Переместить случайно с анимацией
+        function moveRandom() {
+            const maxX = window.innerWidth - 40;
+            const maxY = window.innerHeight - 40;
+            const minX = 40;
+            const minY = 40;
+            
+            const randomX = Math.floor(Math.random() * (maxX - minX)) + minX;
+            const randomY = Math.floor(Math.random() * (maxY - minY)) + minY;
+            
+            // Плавное перемещение
+            point.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            point.style.left = `${randomX}px`;
+            point.style.top = `${randomY}px`;
+            
+            // Эффект исчезновения и появления
+            setTimeout(() => {
+                point.style.transition = 'none';
+                point.style.opacity = '0.3';
+                point.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                
+                setTimeout(() => {
+                    point.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    point.style.opacity = '1';
+                    point.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 100);
+            }, 400);
+        }
+        
+        // Анимация счетчика
+        function animateCounter() {
+            // Эффект увеличения
+            counter.classList.add('counter-pop');
+            
+            // Эффект "прыжка" цифр
+            const counterSpan = document.createElement('span');
+            counterSpan.className = 'counter-bounce';
+            counterSpan.textContent = count;
+            counter.innerHTML = '';
+            counter.appendChild(counterSpan);
+            
+            setTimeout(() => {
+                counter.classList.remove('counter-pop');
+            }, 300);
+        }
+        
+        // Создать след от точки
+        function createTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = `${x}px`;
+            trail.style.top = `${y}px`;
+            body.appendChild(trail);
+            
+            // Удаляем след после анимации
+            setTimeout(() => {
+                trail.remove();
+            }, 800);
+        }
+        
+        // Показать анимацию "+1"
+        function showPlusOne(x, y) {
+            const plusOne = document.createElement('div');
+            plusOne.className = 'plus-one';
+            plusOne.textContent = '';
+            plusOne.style.left = `${x}px`;
+            plusOne.style.top = `${y}px`;
+            body.appendChild(plusOne);
+            
+            // Удаляем после анимации
+            setTimeout(() => {
+                plusOne.remove();
+            }, 1000);
+        }
+        
+        // Адаптация к изменению размера окна
+        window.addEventListener('resize', () => {
+            const pointRect = point.getBoundingClientRect();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Если точка вышла за пределы экрана, перемещаем её
+            if (pointRect.left < 0 || pointRect.right > windowWidth || 
+                pointRect.top < 0 || pointRect.bottom > windowHeight) {
+                moveRandom();
+            }
+        });
+    </script>
+</body>
+</html>
